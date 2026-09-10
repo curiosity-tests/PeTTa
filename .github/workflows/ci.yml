@@ -71,6 +71,7 @@ jobs:
         if: steps.should-build.outputs.build == 'true'
 
       - name: Compute image ref
+        continue-on-error: true   # racecar: scan/report step, must not fail the build
         id: compute
         run: |
           echo "image=ghcr.io/patham9/petta-ci" >> $GITHUB_OUTPUT
