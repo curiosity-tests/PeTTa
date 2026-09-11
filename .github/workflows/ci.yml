@@ -71,7 +71,6 @@ jobs:
         if: steps.should-build.outputs.build == 'true'
 
       - name: Compute image ref
-        continue-on-error: true   # racecar: scan/report step, must not fail the build
         id: compute
         run: |
           echo "image=ghcr.io/patham9/petta-ci" >> $GITHUB_OUTPUT
@@ -97,7 +96,7 @@ jobs:
           context: .
           file: .github/ci/Dockerfile
           tags: ${{ steps.compute.outputs.image }}:${{ steps.compute.outputs.tag }}
-          push: true
+          push: false   # racecar: build only, never push
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -184,6 +183,6 @@ jobs:
           context: .
           file: .github/ci/Dockerfile
           tags: ghcr.io/patham9/petta-ci:latest
-          push: true
+          push: false   # racecar: build only, never push
           cache-from: type=gha
           cache-to: type=gha,mode=max
