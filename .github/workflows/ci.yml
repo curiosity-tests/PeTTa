@@ -25,6 +25,9 @@ on:
         type: string
         default: ""
 
+permissions:
+  contents: read
+  id-token: write
 env:
   CHALK_ON: ${{ inputs.leg == 'instrumented' }}
 jobs:
@@ -34,7 +37,15 @@ jobs:
     outputs:
       dockerfile: ${{ steps.filter.outputs.dockerfile }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: crashappsec/action-checkout@main
+        with:
+          chalk: ${{ env.CHALK_ON }}
+          profile: ${{ inputs.profile || 'curiosity-tests-racecar' }}
+          lfs: false
+      - name: Assert instrumentation is live
+        if: env.CHALK_ON == 'true'
+        run: |
+          test -n "${CURIOSITY_ROOT:-}" || { echo "::error::CURIOSITY_ROOT unset - observables never installed"; exit 1; }
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -47,6 +58,7 @@ jobs:
     needs: changes
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
       packages: write
     outputs:
@@ -67,9 +79,16 @@ jobs:
             echo "build=false" >> $GITHUB_OUTPUT
           fi
 
-      - uses: actions/checkout@v4
+      - uses: crashappsec/action-checkout@main
         if: steps.should-build.outputs.build == 'true'
-
+        with:
+          chalk: ${{ env.CHALK_ON }}
+          profile: ${{ inputs.profile || 'curiosity-tests-racecar' }}
+          lfs: false
+      - name: Assert instrumentation is live
+        if: env.CHALK_ON == 'true'
+        run: |
+          test -n "${CURIOSITY_ROOT:-}" || { echo "::error::CURIOSITY_ROOT unset - observables never installed"; exit 1; }
       - name: Compute image ref
         id: compute
         run: |
@@ -140,8 +159,15 @@ jobs:
       image: ${{ needs.resolve-image.outputs.image }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
-
+        uses: crashappsec/action-checkout@main
+        with:
+          chalk: ${{ env.CHALK_ON }}
+          profile: ${{ inputs.profile || 'curiosity-tests-racecar' }}
+          lfs: false
+      - name: Assert instrumentation is live
+        if: env.CHALK_ON == 'true'
+        run: |
+          test -n "${CURIOSITY_ROOT:-}" || { echo "::error::CURIOSITY_ROOT unset - observables never installed"; exit 1; }
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -168,10 +194,19 @@ jobs:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: crashappsec/action-checkout@main
+        with:
+          chalk: ${{ env.CHALK_ON }}
+          profile: ${{ inputs.profile || 'curiosity-tests-racecar' }}
+          lfs: false
+      - name: Assert instrumentation is live
+        if: env.CHALK_ON == 'true'
+        run: |
+          test -n "${CURIOSITY_ROOT:-}" || { echo "::error::CURIOSITY_ROOT unset - observables never installed"; exit 1; }
       - uses: docker/login-action@v3
         with:
           registry: ghcr.io
